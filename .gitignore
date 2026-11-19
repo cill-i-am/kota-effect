@@ -1,0 +1,7 @@
+node_modules/
+lib/
+*.tsbuildinfo
+.DS_Store
+.env
+# Converted Smithy models. `pnpm generate` keeps them in memory; `pnpm --filter @kota/effect convert` writes them here for patch authoring.
+packages/*/.generated-specs/

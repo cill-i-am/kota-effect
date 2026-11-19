@@ -1,0 +1,51 @@
+{
+  "description": "Error statuses these operations return in practice but the OpenAPI document does not declare: CreateEmployee can return 404 for an unknown employer; ListEmployerHealthInsurancePolicies, ListGroupEmployees, ListGroups and ListPolicies can return 400 validation problems for bad pagination or filters; ListGroupEmployees can return 404 for an unknown group.",
+  "patches": [
+    {
+      "op": "add",
+      "path": "/shapes/io.kota.api#CreateEmployee/errors/-",
+      "value": {
+        "target": "io.kota.api#NotFound"
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/io.kota.api#ListEmployerHealthInsurancePolicies/errors",
+      "value": [
+        {
+          "target": "io.kota.api#BadRequest"
+        }
+      ]
+    },
+    {
+      "op": "add",
+      "path": "/shapes/io.kota.api#ListGroupEmployees/errors",
+      "value": [
+        {
+          "target": "io.kota.api#BadRequest"
+        },
+        {
+          "target": "io.kota.api#NotFound"
+        }
+      ]
+    },
+    {
+      "op": "add",
+      "path": "/shapes/io.kota.api#ListGroups/errors",
+      "value": [
+        {
+          "target": "io.kota.api#BadRequest"
+        }
+      ]
+    },
+    {
+      "op": "add",
+      "path": "/shapes/io.kota.api#ListPolicies/errors",
+      "value": [
+        {
+          "target": "io.kota.api#BadRequest"
+        }
+      ]
+    }
+  ]
+}

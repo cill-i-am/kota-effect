@@ -1,0 +1,27 @@
+{
+  "name": "kota-effect",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm --filter @kota/effect build",
+    "typecheck": "pnpm --filter @kota/effect typecheck",
+    "test": "vitest run",
+    "generate": "pnpm --filter @kota/effect generate",
+    "spec:fetch": "pnpm --filter @kota/effect spec:fetch",
+    "vendor:distilled": "node scripts/vendor-distilled.ts",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check"
+  },
+  "devDependencies": {
+    "@effect/vitest": "4.1.4",
+    "@types/node": "26.6.6",
+    "oxfmt": "0.78.0",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@10.33.3"
+}

@@ -1,0 +1,70 @@
+{
+  "name": "@kota/effect",
+  "version": "0.1.0",
+  "description": "Effect-native TypeScript SDK for the Kota public API, generated with distilled.",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./Credentials": {
+      "types": "./lib/credentials.d.ts",
+      "default": "./lib/credentials.js"
+    },
+    "./Errors": {
+      "types": "./lib/errors.d.ts",
+      "default": "./lib/errors.js"
+    },
+    "./Pagination": {
+      "types": "./lib/pagination.d.ts",
+      "default": "./lib/pagination.js"
+    },
+    "./Protocol": {
+      "types": "./lib/protocol.d.ts",
+      "default": "./lib/protocol.js"
+    },
+    "./Retry": {
+      "types": "./lib/retry.d.ts",
+      "default": "./lib/retry.js"
+    },
+    "./Traits": {
+      "types": "./lib/traits.d.ts",
+      "default": "./lib/traits.js"
+    },
+    "./Webhooks": {
+      "types": "./lib/webhooks.d.ts",
+      "default": "./lib/webhooks.js"
+    },
+    "./*": {
+      "types": "./lib/services/*.d.ts",
+      "default": "./lib/services/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "convert": "node scripts/convert.ts",
+    "generate": "node scripts/generate.ts && node scripts/generate-webhooks.ts",
+    "spec:fetch": "node scripts/fetch-spec.ts"
+  },
+  "dependencies": {
+    "@distilled.cloud/core": "1.0.0-rc.19"
+  },
+  "devDependencies": {
+    "@distilled.cloud/dev": "workspace:*",
+    "effect": "4.1.4"
+  },
+  "peerDependencies": {
+    "effect": "^4.1.4"
+  },
+  "distilled": {
+    "generatedAt": "2026-11-12",
+    "specUpdatedAt": "2026-11-12"
+  }
+}

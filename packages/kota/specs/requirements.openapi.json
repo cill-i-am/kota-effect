@@ -1,0 +1,1322 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Adaptive Requirements API",
+    "version": "1.0.0",
+    "description": "Public API for retrieving requirement schemas and submitting answers."
+  },
+  "paths": {
+    "/requirements/{requirement_id}": {
+      "get": {
+        "tags": [
+          "Requirements"
+        ],
+        "operationId": "get-requirement",
+        "parameters": [
+          {
+            "name": "requirement_id",
+            "in": "path",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "A requirement identifier in the format ar_ followed by 32 lowercase hex characters (e.g. ar_0a1b2c3d4e5f67890a1b2c3d4e5f6789).",
+                  "title": "Requirement ID",
+                  "pattern": "^ar_[0-9a-f]{32}$"
+                },
+                {
+                  "type": "string",
+                  "description": "A requirement-set identifier in the format ars_ followed by 32 lowercase hex characters.",
+                  "title": "Requirement Set ID",
+                  "pattern": "^ars_[0-9a-f]{32}$"
+                }
+              ],
+              "description": "A requirement identifier: either an individual requirement in the format ar_ followed by 32 lowercase hex characters, or a requirement set in the format ars_ followed by 32 lowercase hex characters.",
+              "title": "Requirement Handle"
+            },
+            "required": true,
+            "description": "A requirement identifier: either an individual requirement in the format ar_ followed by 32 lowercase hex characters (e.g. ar_0a1b2c3d4e5f67890a1b2c3d4e5f6789), or a requirement set in the format ars_ followed by 32 lowercase hex characters (e.g. ars_0a1b2c3d4e5f67890a1b2c3d4e5f6789). A set id retrieves or jointly submits every member requirement through one composed schema."
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Authorization header using the Bearer scheme",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "is_fulfilled": {
+                      "type": "boolean",
+                      "description": "Whether this requirement has already been fulfilled. For a requirement-set (ars_) id, whether every member requirement in the set has already been fulfilled."
+                    },
+                    "fulfilled_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "When the requirement (or set) was fulfilled. Present only when fulfilled."
+                    },
+                    "schema": {
+                      "type": "object",
+                      "description": "A JSON Schema object describing the fields required for this requirement. For a requirement-set (ars_) id this is a single schema composed from every member requirement, with shared fields deduplicated — it never includes member requirement IDs. Present for pending requirements and may also be returned for fulfilled requirements."
+                    }
+                  },
+                  "required": [
+                    "is_fulfilled"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "A URI reference identifying the problem type (RFC 9110 section URL).",
+                      "example": "https://tools.ietf.org/html/rfc9110#section-15.5.1"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "A short human-readable summary of the problem type.",
+                      "example": "Invalid request"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "The HTTP status code.",
+                      "example": 400
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "The request did not match the expected schema."
+                    },
+                    "error_code": {
+                      "type": "string",
+                      "description": "Stable machine-readable error code. Use this for branching; detail is informational only.",
+                      "example": "invalid_request"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "description": "Trace identifier for correlating the error with server-side logs."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "error_code",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "A URI reference identifying the problem type (RFC 9110 section URL).",
+                      "example": "https://tools.ietf.org/html/rfc9110#section-15.5.2"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "A short human-readable summary of the problem type.",
+                      "example": "Unauthorized"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "The HTTP status code.",
+                      "example": 401
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "The authentication token is invalid or missing."
+                    },
+                    "error_code": {
+                      "type": "string",
+                      "description": "Stable machine-readable error code. Use this for branching; detail is informational only.",
+                      "example": "unauthorized"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "description": "Trace identifier for correlating the error with server-side logs."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "error_code",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "A URI reference identifying the problem type (RFC 9110 section URL).",
+                      "example": "https://tools.ietf.org/html/rfc9110#section-15.5.5"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "A short human-readable summary of the problem type.",
+                      "example": "Resource not found"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "The HTTP status code.",
+                      "example": 404
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Neither a requirement nor a requirement set was found for this ID."
+                    },
+                    "error_code": {
+                      "type": "string",
+                      "description": "Stable machine-readable error code. Use this for branching; detail is informational only.",
+                      "example": "not_found"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "description": "Trace identifier for correlating the error with server-side logs."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "error_code",
+                    "trace_id"
+                  ]
+                },
+                "examples": {
+                  "requirement_not_found": {
+                    "summary": "No individual requirement (ar_) has this ID",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+                      "title": "Resource not found",
+                      "status": 404,
+                      "detail": "Requirement ar_0a1b2c3d4e5f67890a1b2c3d4e5f6789 not found",
+                      "error_code": "not_found",
+                      "trace_id": "00000000000000000000000000000000"
+                    }
+                  },
+                  "requirement_set_not_found": {
+                    "summary": "No requirement set (ars_) has this ID",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+                      "title": "Resource not found",
+                      "status": 404,
+                      "detail": "Requirement set ars_0a1b2c3d4e5f67890a1b2c3d4e5f6789 not found",
+                      "error_code": "not_found",
+                      "trace_id": "00000000000000000000000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "A URI reference identifying the problem type (RFC 9110 section URL).",
+                      "example": "https://tools.ietf.org/html/rfc9110#section-15.5.10"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "A short human-readable summary of the problem type.",
+                      "example": "Conflict"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "The HTTP status code.",
+                      "example": 409
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "The requirement set's member schemas or their stored values cannot be composed into a single set schema. Never returned for an individual (ar_) requirement."
+                    },
+                    "error_code": {
+                      "type": "string",
+                      "description": "Stable machine-readable error code. Use this for branching; detail is informational only.",
+                      "example": "requirement_set_conflict"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "description": "Trace identifier for correlating the error with server-side logs."
+                    },
+                    "conflict_type": {
+                      "type": "string",
+                      "enum": [
+                        "unsafe_field_ids",
+                        "incompatible_fields",
+                        "incompatible_datasets",
+                        "subfields_not_supported",
+                        "stored_value_conflict"
+                      ],
+                      "description": "unsafe_field_ids: a member schema uses a reserved field ID (__proto__, prototype, or constructor) — field_ids names it. incompatible_fields: two members declare the same field ID with incompatible definitions — field_ids names the offending field(s). incompatible_datasets: two members declare the same dataset ID with different items — dataset_ids names the offending dataset(s). subfields_not_supported: a member schema uses nested/recursive subfields, which requirement sets do not support. stored_value_conflict: two members have stored different, non-empty values for the same shared field — field_ids names the field(s)."
+                    },
+                    "field_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Field IDs involved in the conflict. Present for unsafe_field_ids, incompatible_fields, and stored_value_conflict."
+                    },
+                    "dataset_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Dataset IDs involved in the conflict. Present for incompatible_datasets."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "error_code",
+                    "trace_id",
+                    "conflict_type"
+                  ]
+                },
+                "examples": {
+                  "composition_conflict": {
+                    "summary": "Member schemas or stored values conflict (ars_ id only)",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+                      "title": "Conflict",
+                      "status": 409,
+                      "detail": "Requirement-set schemas or stored values cannot be composed",
+                      "error_code": "requirement_set_conflict",
+                      "conflict_type": "stored_value_conflict",
+                      "field_ids": [
+                        "company_name"
+                      ],
+                      "trace_id": "00000000000000000000000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An error occurred while processing your request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "A URI reference identifying the problem type (RFC 9110 section URL).",
+                      "example": "https://tools.ietf.org/html/rfc9110#section-15.6.1"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "A short human-readable summary of the problem type.",
+                      "example": "An error occurred while processing your request"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "The HTTP status code.",
+                      "example": 500
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "An internal error occurred."
+                    },
+                    "error_code": {
+                      "type": "string",
+                      "description": "Stable machine-readable error code. Use this for branching; detail is informational only.",
+                      "example": "internal_error"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "description": "Trace identifier for correlating the error with server-side logs."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "error_code",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Retrieve the JSON Schema and fulfillment state for a requirement or a requirement set. Clients can determine from a single GET whether it is still pending or has already been fulfilled. An ar_ id evaluates a single requirement; an ars_ id returns the schema composed from every member requirement (shared fields deduplicated, member ids never included) and reports fulfilled only once every member is.",
+        "summary": "Get a requirement"
+      },
+      "post": {
+        "tags": [
+          "Requirements"
+        ],
+        "operationId": "submit-answers",
+        "parameters": [
+          {
+            "name": "requirement_id",
+            "in": "path",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "A requirement identifier in the format ar_ followed by 32 lowercase hex characters (e.g. ar_0a1b2c3d4e5f67890a1b2c3d4e5f6789).",
+                  "title": "Requirement ID",
+                  "pattern": "^ar_[0-9a-f]{32}$"
+                },
+                {
+                  "type": "string",
+                  "description": "A requirement-set identifier in the format ars_ followed by 32 lowercase hex characters.",
+                  "title": "Requirement Set ID",
+                  "pattern": "^ars_[0-9a-f]{32}$"
+                }
+              ],
+              "description": "A requirement identifier: either an individual requirement in the format ar_ followed by 32 lowercase hex characters, or a requirement set in the format ars_ followed by 32 lowercase hex characters.",
+              "title": "Requirement Handle"
+            },
+            "required": true,
+            "description": "A requirement identifier: either an individual requirement in the format ar_ followed by 32 lowercase hex characters (e.g. ar_0a1b2c3d4e5f67890a1b2c3d4e5f6789), or a requirement set in the format ars_ followed by 32 lowercase hex characters (e.g. ars_0a1b2c3d4e5f67890a1b2c3d4e5f6789). A set id retrieves or jointly submits every member requirement through one composed schema."
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Authorization header using the Bearer scheme",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "in_progress",
+                        "fulfilled"
+                      ],
+                      "description": "The derived submission status. \"fulfilled\" once the cumulative answers satisfy the whole (or, for an ars_ id, composed) schema; \"in_progress\" when answers are stored but not yet complete; \"pending\" when no answers are stored."
+                    },
+                    "outstanding_fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Field IDs still blocking fulfillment (composed across every member, for an ars_ id). Present only for an \"in_progress\" submission."
+                    },
+                    "schema": {
+                      "type": "object",
+                      "description": "The requirement (or, for an ars_ id, composed set) schema with the current cumulative answers injected as field defaults, so the client can render the next step (or confirm completion) without a follow-up GET."
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "schema"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "A URI reference identifying the problem type (RFC 9110 section URL).",
+                      "example": "https://tools.ietf.org/html/rfc9110#section-15.5.1"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "A short human-readable summary.",
+                      "example": "Invalid request"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "The HTTP status code.",
+                      "example": 400
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "A human-readable explanation of the validation failure."
+                    },
+                    "error_code": {
+                      "type": "string",
+                      "description": "Stable machine-readable error code. Use this for branching; detail is informational only.",
+                      "example": "invalid_request"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "description": "Trace identifier for correlating the error with server-side logs."
+                    },
+                    "errors": {
+                      "type": "array",
+                      "description": "Per-field validation errors. Present when error_code is invalid_request and the failure is a field-level validation error (AnswerValidationFailedError).",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "field_id": {
+                            "type": "string",
+                            "description": "The field that failed validation."
+                          },
+                          "error_type": {
+                            "type": "string",
+                            "description": "The type of validation error: validation for a value that fails the schema, or for a file field file_not_found (the caller cannot see the file), file_type_not_accepted or file_too_large."
+                          },
+                          "message": {
+                            "type": "string",
+                            "description": "A human-readable error message."
+                          }
+                        },
+                        "required": [
+                          "field_id",
+                          "error_type",
+                          "message"
+                        ]
+                      }
+                    },
+                    "unknown_fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Submitted field IDs not present in the resolved (or, for an ars_ id, composed) schema. Present when error_code is invalid_request and the failure is UnknownFieldsError."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "error_code",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "A URI reference identifying the problem type (RFC 9110 section URL).",
+                      "example": "https://tools.ietf.org/html/rfc9110#section-15.5.2"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "A short human-readable summary of the problem type.",
+                      "example": "Unauthorized"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "The HTTP status code.",
+                      "example": 401
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "The authentication token is invalid or missing."
+                    },
+                    "error_code": {
+                      "type": "string",
+                      "description": "Stable machine-readable error code. Use this for branching; detail is informational only.",
+                      "example": "unauthorized"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "description": "Trace identifier for correlating the error with server-side logs."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "error_code",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "A URI reference identifying the problem type (RFC 9110 section URL).",
+                      "example": "https://tools.ietf.org/html/rfc9110#section-15.5.5"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "A short human-readable summary of the problem type.",
+                      "example": "Resource not found"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "The HTTP status code.",
+                      "example": 404
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Neither a requirement nor a requirement set was found for this ID."
+                    },
+                    "error_code": {
+                      "type": "string",
+                      "description": "Stable machine-readable error code. Use this for branching; detail is informational only.",
+                      "example": "not_found"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "description": "Trace identifier for correlating the error with server-side logs."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "error_code",
+                    "trace_id"
+                  ]
+                },
+                "examples": {
+                  "requirement_not_found": {
+                    "summary": "No individual requirement (ar_) has this ID",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+                      "title": "Resource not found",
+                      "status": 404,
+                      "detail": "Requirement ar_0a1b2c3d4e5f67890a1b2c3d4e5f6789 not found",
+                      "error_code": "not_found",
+                      "trace_id": "00000000000000000000000000000000"
+                    }
+                  },
+                  "requirement_set_not_found": {
+                    "summary": "No requirement set (ars_) has this ID",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+                      "title": "Resource not found",
+                      "status": 404,
+                      "detail": "Requirement set ars_0a1b2c3d4e5f67890a1b2c3d4e5f6789 not found",
+                      "error_code": "not_found",
+                      "trace_id": "00000000000000000000000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "A URI reference identifying the problem type (RFC 9110 section URL).",
+                      "example": "https://tools.ietf.org/html/rfc9110#section-15.5.10"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "A short human-readable summary of the problem type.",
+                      "example": "Conflict"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "The HTTP status code.",
+                      "example": 409
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "The requirement (or requirement set) has already been fulfilled; the requirement is a member of a requirement set and must be submitted through that set instead; or the set member schemas/stored values cannot be composed."
+                    },
+                    "error_code": {
+                      "type": "string",
+                      "description": "Stable machine-readable error code. Use this for branching; detail is informational only.",
+                      "example": "requirement_already_fulfilled"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "description": "Trace identifier for correlating the error with server-side logs."
+                    },
+                    "requirement_set_id": {
+                      "type": "string",
+                      "description": "The requirement-set ID to submit through instead. Present only when error_code is requirement_set_submission_required.",
+                      "example": "ars_0a1b2c3d4e5f67890a1b2c3d4e5f6789"
+                    },
+                    "conflict_type": {
+                      "type": "string",
+                      "enum": [
+                        "unsafe_field_ids",
+                        "incompatible_fields",
+                        "incompatible_datasets",
+                        "subfields_not_supported",
+                        "stored_value_conflict"
+                      ],
+                      "description": "unsafe_field_ids: a member schema uses a reserved field ID (__proto__, prototype, or constructor) — field_ids names it. incompatible_fields: two members declare the same field ID with incompatible definitions — field_ids names the offending field(s). incompatible_datasets: two members declare the same dataset ID with different items — dataset_ids names the offending dataset(s). subfields_not_supported: a member schema uses nested/recursive subfields, which requirement sets do not support. stored_value_conflict: two members have stored different, non-empty values for the same shared field — field_ids names the field(s)."
+                    },
+                    "field_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Field IDs involved in the conflict. Present for unsafe_field_ids, incompatible_fields, and stored_value_conflict."
+                    },
+                    "dataset_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Dataset IDs involved in the conflict. Present for incompatible_datasets."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "error_code",
+                    "trace_id"
+                  ]
+                },
+                "examples": {
+                  "already_fulfilled": {
+                    "summary": "The requirement has already been fulfilled",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+                      "title": "Conflict",
+                      "status": 409,
+                      "detail": "Requirement ar_0a1b2c3d4e5f67890a1b2c3d4e5f6789 is already fulfilled",
+                      "error_code": "requirement_already_fulfilled",
+                      "trace_id": "00000000000000000000000000000000"
+                    }
+                  },
+                  "set_submission_required": {
+                    "summary": "The requirement must be submitted through its requirement set",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+                      "title": "Conflict",
+                      "status": 409,
+                      "detail": "This requirement must be submitted through its requirement set",
+                      "error_code": "requirement_set_submission_required",
+                      "requirement_set_id": "ars_0a1b2c3d4e5f67890a1b2c3d4e5f6789",
+                      "trace_id": "00000000000000000000000000000000"
+                    }
+                  },
+                  "set_already_fulfilled": {
+                    "summary": "The requirement set has already been fulfilled",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+                      "title": "Conflict",
+                      "status": 409,
+                      "detail": "Requirement set ars_0a1b2c3d4e5f67890a1b2c3d4e5f6789 is already fulfilled",
+                      "error_code": "requirement_set_already_fulfilled",
+                      "trace_id": "00000000000000000000000000000000"
+                    }
+                  },
+                  "composition_conflict": {
+                    "summary": "Member schemas or stored values conflict (ars_ id only)",
+                    "value": {
+                      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+                      "title": "Conflict",
+                      "status": 409,
+                      "detail": "Requirement-set schemas or stored values cannot be composed",
+                      "error_code": "requirement_set_conflict",
+                      "conflict_type": "stored_value_conflict",
+                      "field_ids": [
+                        "company_name"
+                      ],
+                      "trace_id": "00000000000000000000000000000000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An error occurred while processing your request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "A URI reference identifying the problem type (RFC 9110 section URL).",
+                      "example": "https://tools.ietf.org/html/rfc9110#section-15.6.1"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "A short human-readable summary of the problem type.",
+                      "example": "An error occurred while processing your request"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "The HTTP status code.",
+                      "example": 500
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "An internal error occurred."
+                    },
+                    "error_code": {
+                      "type": "string",
+                      "description": "Stable machine-readable error code. Use this for branching; detail is informational only.",
+                      "example": "internal_error"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "description": "Trace identifier for correlating the error with server-side logs."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "error_code",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "A URI reference identifying the problem type (RFC 9110 section URL).",
+                      "example": "https://tools.ietf.org/html/rfc9110#section-15.6.4"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "A short human-readable summary of the problem type.",
+                      "example": "Service unavailable"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "The HTTP status code.",
+                      "example": 503
+                    },
+                    "detail": {
+                      "type": "string",
+                      "description": "Submitted files couldn't be checked. Nothing was saved; retry the submission."
+                    },
+                    "error_code": {
+                      "type": "string",
+                      "description": "Stable machine-readable error code. Use this for branching; detail is informational only.",
+                      "example": "service_unavailable"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "description": "Trace identifier for correlating the error with server-side logs."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "error_code",
+                    "trace_id"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Submit answers for a requirement, or jointly for every member of a requirement set. The payload is merged into any previously stored answers and the cumulative result is evaluated against the resolved (ar_) or composed (ars_) schema. When the cumulative answers satisfy the whole schema the requirement/set is fulfilled (\"fulfilled\"); otherwise the submission is persisted and it stays \"in_progress\", returning the field IDs still outstanding. A field that is submitted but empty/invalid returns a 400 with per-field error details (AnswerValidationFailedError); a field ID not present in the schema returns a 400 (UnknownFieldsError). A required field simply not yet submitted is not an error. An ar_ id that is itself a member of a requirement set cannot be submitted individually — it returns 409 requirement_set_submission_required, naming the ars_ id to submit through instead; that ars_ id then dispatches straight to the joint submission. A file field's answer is an array of file IDs from POST /files; each submitted ID is looked up with the caller's own token, and a file the caller cannot see, or that does not match the field's accepted types or size limit, returns a 400 field error (error_type file_not_found, file_type_not_accepted or file_too_large). If files cannot be checked, the submission returns 503 and nothing is saved; it is safe to retry.",
+        "summary": "Submit answers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "answers"
+                ],
+                "properties": {
+                  "answers": {
+                    "type": "object",
+                    "required": [],
+                    "properties": {},
+                    "additionalProperties": {
+                      "$id": "/schemas/unknown",
+                      "title": "unknown"
+                    },
+                    "description": "A key-value map of field IDs to answer values.",
+                    "title": "Answers"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HttpApiDecodeError": {
+        "type": "object",
+        "required": [
+          "issues",
+          "message",
+          "_tag"
+        ],
+        "properties": {
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            }
+          },
+          "message": {
+            "type": "string"
+          },
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "HttpApiDecodeError"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "description": "The request did not match the expected schema"
+      },
+      "Issue": {
+        "type": "object",
+        "required": [
+          "_tag",
+          "path",
+          "message"
+        ],
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "Pointer",
+              "Unexpected",
+              "Missing",
+              "Composite",
+              "Refinement",
+              "Transformation",
+              "Type",
+              "Forbidden"
+            ],
+            "description": "The tag identifying the type of parse issue"
+          },
+          "path": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PropertyKey"
+            },
+            "description": "The path to the property where the issue occurred"
+          },
+          "message": {
+            "type": "string",
+            "description": "A descriptive message explaining the issue"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Represents an error encountered while parsing a value to match the schema"
+      },
+      "PropertyKey": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "object",
+            "required": [
+              "_tag",
+              "key"
+            ],
+            "properties": {
+              "_tag": {
+                "type": "string",
+                "enum": [
+                  "symbol"
+                ]
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "description": "an object to be decoded into a globally shared symbol"
+          }
+        ]
+      },
+      "PlatformTokenInvalidError": {
+        "type": "object",
+        "required": [
+          "message",
+          "_tag"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "PlatformTokenInvalidError"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequirementNotFoundError": {
+        "type": "object",
+        "required": [
+          "requirementId",
+          "message",
+          "_tag"
+        ],
+        "properties": {
+          "requirementId": {
+            "type": "string",
+            "description": "A requirement identifier in the format ar_ followed by 32 lowercase hex characters (e.g. ar_0a1b2c3d4e5f67890a1b2c3d4e5f6789).",
+            "title": "Requirement ID",
+            "pattern": "^ar_[0-9a-f]{32}$"
+          },
+          "message": {
+            "type": "string"
+          },
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "RequirementNotFoundError"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequirementSetNotFoundError": {
+        "type": "object",
+        "required": [
+          "requirementSetId",
+          "message",
+          "_tag"
+        ],
+        "properties": {
+          "requirementSetId": {
+            "type": "string",
+            "description": "A requirement-set identifier in the format ars_ followed by 32 lowercase hex characters.",
+            "title": "Requirement Set ID",
+            "pattern": "^ars_[0-9a-f]{32}$"
+          },
+          "message": {
+            "type": "string"
+          },
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "RequirementSetNotFoundError"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "SchemaResolutionError": {
+        "type": "object",
+        "required": [
+          "message",
+          "_tag"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "cause": {
+            "type": "string"
+          },
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "SchemaResolutionError"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatabaseError": {
+        "type": "object",
+        "required": [
+          "message",
+          "_tag"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "cause": {
+            "type": "string"
+          },
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "DatabaseError"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "AnswerValidationFailedError": {
+        "type": "object",
+        "required": [
+          "message",
+          "errors",
+          "_tag"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "field_id",
+                "error_type",
+                "message"
+              ],
+              "properties": {
+                "field_id": {
+                  "type": "string"
+                },
+                "error_type": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "AnswerValidationFailedError"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequirementAlreadyFulfilledError": {
+        "type": "object",
+        "required": [
+          "requirementId",
+          "message",
+          "_tag"
+        ],
+        "properties": {
+          "requirementId": {
+            "type": "string",
+            "description": "A requirement identifier in the format ar_ followed by 32 lowercase hex characters (e.g. ar_0a1b2c3d4e5f67890a1b2c3d4e5f6789).",
+            "title": "Requirement ID",
+            "pattern": "^ar_[0-9a-f]{32}$"
+          },
+          "message": {
+            "type": "string"
+          },
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "RequirementAlreadyFulfilledError"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequirementSetAlreadyFulfilledError": {
+        "type": "object",
+        "required": [
+          "requirementSetId",
+          "message",
+          "_tag"
+        ],
+        "properties": {
+          "requirementSetId": {
+            "type": "string",
+            "description": "A requirement-set identifier in the format ars_ followed by 32 lowercase hex characters.",
+            "title": "Requirement Set ID",
+            "pattern": "^ars_[0-9a-f]{32}$"
+          },
+          "message": {
+            "type": "string"
+          },
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "RequirementSetAlreadyFulfilledError"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequirementSetSubmissionRequiredError": {
+        "type": "object",
+        "required": [
+          "requirementId",
+          "requirementSetId",
+          "message",
+          "_tag"
+        ],
+        "properties": {
+          "requirementId": {
+            "type": "string",
+            "description": "A requirement identifier in the format ar_ followed by 32 lowercase hex characters (e.g. ar_0a1b2c3d4e5f67890a1b2c3d4e5f6789).",
+            "title": "Requirement ID",
+            "pattern": "^ar_[0-9a-f]{32}$"
+          },
+          "requirementSetId": {
+            "type": "string",
+            "description": "A requirement-set identifier in the format ars_ followed by 32 lowercase hex characters.",
+            "title": "Requirement Set ID",
+            "pattern": "^ars_[0-9a-f]{32}$"
+          },
+          "message": {
+            "type": "string"
+          },
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "RequirementSetSubmissionRequiredError"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "FileLookupUpstreamError": {
+        "type": "object",
+        "required": [
+          "message",
+          "_tag"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "cause": {
+            "type": "string"
+          },
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "FileLookupUpstreamError"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "Requirements",
+      "description": "Public endpoints for retrieving requirement (or requirement-set) schemas and submitting answers."
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://test.api.kota.io",
+      "description": "Test Kota API"
+    },
+    {
+      "url": "https://api.kota.io",
+      "description": "Production Kota API"
+    }
+  ]
+}

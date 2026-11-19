@@ -1,0 +1,17 @@
+{
+  "name": "@distilled.cloud/dev",
+  "version": "0.0.0-vendored.88e9b65",
+  "private": true,
+  "description": "Vendored copy of distilled's private code generator (packages/dev). See README.md for provenance.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@distilled.cloud/core": "1.0.0-rc.19",
+    "@effect/platform-node": "4.1.4",
+    "effect": "4.1.4",
+    "rolldown": "1.3.2"
+  }
+}
